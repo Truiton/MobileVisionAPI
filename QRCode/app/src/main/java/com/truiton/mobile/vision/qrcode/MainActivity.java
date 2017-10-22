@@ -7,11 +7,13 @@ import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.provider.MediaStore;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.FileProvider;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.util.SparseArray;
@@ -134,6 +136,7 @@ public class MainActivity extends AppCompatActivity {
                                 break;
                         }
                     }
+
                     if (barcodes.size() == 0) {
                         scanResults.setText("Scan Failed: Found nothing to scan");
                     }
@@ -145,13 +148,26 @@ public class MainActivity extends AppCompatActivity {
                         .show();
                 Log.e(LOG_TAG, e.toString());
             }
+            /*Deleting the photo stored after clicking the picture*/
+            File photo = new File(Environment.getExternalStorageDirectory(), "picture.jpg");
+            if (photo.exists()) {
+                photo.delete();
+            }
+
         }
     }
 
     private void takePicture() {
         Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
         File photo = new File(Environment.getExternalStorageDirectory(), "picture.jpg");
-        imageUri = Uri.fromFile(photo);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            imageUri = FileProvider.getUriForFile(getApplicationContext(),
+                    getApplicationContext()
+                            .getPackageName() + ".provider", photo);
+        } else {
+            imageUri = Uri.fromFile(photo);
+        }
+
         intent.putExtra(MediaStore.EXTRA_OUTPUT, imageUri);
         startActivityForResult(intent, PHOTO_REQUEST);
     }
